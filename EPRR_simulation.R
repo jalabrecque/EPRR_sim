@@ -1,5 +1,5 @@
 # The following code is written by Jeremy Labrecque
-# Postdoctoral research fellow in the Department of Epdemiology at Erasmus MC
+# Assistant Professor in the Department of Epidemiology at Erasmus MC
 # August 22, 2019
 
 # The only required library is 'magrittr'
