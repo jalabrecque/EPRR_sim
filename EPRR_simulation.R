@@ -17,14 +17,17 @@
 # This function runs one simulation and analyzes it
 eprr_sim <- function(n = 10000, c_a = 1.75, c_y = 1.75, a_y = 1.3, sex_y = 0.75) {
   # SEX AS A CONFOUNDER
+  
+  ## Generate data
   sex <- rbinom(n = n, size = 1, prob = 0.5)
   c <- rbinom(n = n, size = 1, prob = 0.5)
   a <- rbinom(n = n, size = 1, prob = exp(log(0.33/0.66) + log(c_a)*c))
-  a[sex==1] <- 0
+  a[sex==1] <- 0  # Set the exposure in men to 0
   y <- rbinom(n = n, size = 1, prob = exp(log(0.2/0.8) + log(a_y)*a + log(c_y)*c + log(sex_y)*sex))
   
   ds_c <- data.frame(sex, c, a, y)
   
+  ## Adjusting for C
   mod_corr <- glm(y ~ a + c, data = ds_c, family = binomial(link=log))
   est_corr <- summary(mod_corr)$coefficients["a",c("Estimate","Std. Error")]
   
@@ -34,7 +37,7 @@ eprr_sim <- function(n = 10000, c_a = 1.75, c_y = 1.75, a_y = 1.3, sex_y = 0.75)
   mod_corr_restr_sex <- glm(y ~ a + c, data = ds_c[ds_c$sex==0,], family = binomial(link=log))
   est_corr_restr_sex <- summary(mod_corr_restr_sex)$coefficients["a",c("Estimate","Std. Error")]
   
-  
+  ## Not adjusting for C
   mod_biased <- glm(y ~ a, data = ds_c, family = binomial(link=log))
   est_biased <- summary(mod_biased)$coefficients["a",c("Estimate","Std. Error")]
   
@@ -53,15 +56,18 @@ eprr_sim <- function(n = 10000, c_a = 1.75, c_y = 1.75, a_y = 1.3, sex_y = 0.75)
   
   names(out_c) <- paste0("c_",apply(expand.grid(c("est","se","bias"), c("corr","corr_adj_sex","corr_restr_sex", "biased","biased_adj_sex","biased_restr_sex")), 1, paste, collapse="_"))
   
-  # SEX AND AN IV
+  # SEX AS AN IV
+  
+  ## Data generation
   sex <- rbinom(n = n, size = 1, prob = 0.5)
   c <- rbinom(n = n, size = 1, prob = 0.5)
   a <- rbinom(n = n, size = 1, prob = exp(log(0.33/0.66) + log(c_a)*c))
   a[sex==1] <- 0
-  y <- rbinom(n = n, size = 1, prob = exp(log(0.2/0.8) + log(a_y)*a + log(c_y)*c))
+  y <- rbinom(n = n, size = 1, prob = exp(log(0.175/0.8) + log(a_y)*a + log(c_y)*c)) ; mean(y)
   
   ds_iv <- data.frame(sex, c, a, y)
   
+  ## Adjusting for C
   mod_corr <- glm(y ~ a + c, data = ds_iv, family = binomial(link=log))
   est_corr <- summary(mod_corr)$coefficients["a",c("Estimate","Std. Error")]
   
@@ -71,7 +77,7 @@ eprr_sim <- function(n = 10000, c_a = 1.75, c_y = 1.75, a_y = 1.3, sex_y = 0.75)
   mod_corr_restr_sex <- glm(y ~ a + c, data = ds_iv[ds_iv$sex==0,], family = binomial(link=log))
   est_corr_restr_sex <- summary(mod_corr_restr_sex)$coefficients["a",c("Estimate","Std. Error")]
   
-  
+  ## Not adjusting for C
   mod_biased <- glm(y ~ a, data = ds_iv, family = binomial(link=log))
   est_biased <- summary(mod_biased)$coefficients["a",c("Estimate","Std. Error")]
   
